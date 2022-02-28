@@ -6,5 +6,5 @@ How to use:
 - Invite the bot with application.commands scope (for slash commands);
 - Enjoy :')
 
-Thanks to GEFF and TheDemonTeam for helping me testing the bot.
+Thanks to GEFF and TheDemonTeam for helping me testing the bot. Go and checkout their projects and tools.
 https://github.com/TheDemonTeam
