@@ -1,2 +1,10 @@
 # Litio
-Discord Anti-Raid bot with anti-threadspam, anti-messagespam and anti-join. Start the Litio.exe file in bin/Debug, insert your bot token with the "Bot " prefix and wait until it's ready. Example: Insert your bot token: Bot ODczNzAwNzIzOTUzNjY0MDIx.YQ8PNQ.zHzstg5AeNV1b3o8FYYes5kLkaA
+How to use:
+- Go info bin/Debug folder;
+- Start Litio.exe;
+- Insert your bot/account token (If bot token make dire you have inserted the 'Bot ' prefix before the token);
+- Invite the bot with application.commands scope (for slash commands);
+- Enjoy :')
+
+Thanks to GEFF and TheDemonTeam for helping me testing the bot.
+https://github.com/TheDemonTeam
