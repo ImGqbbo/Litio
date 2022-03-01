@@ -47,7 +47,12 @@ namespace Litio
                 client.OnThreadCreated += Client_OnThreadCreated;
                 client.OnInteraction += Client_OnInteraction;
 
-                client.Login(Utils.Token);
+                Console.Write(" [Litio] Bot token? [Y/N] ");
+                string botToken = Console.ReadLine();
+                Console.Write(" [Litio] Insert token: ");
+                string token = Console.ReadLine();
+
+                client.Login(botToken.ToLower() == "y" ? "Bot " + token : token);
                 Thread.Sleep(-1);
             }
             catch (InvalidTokenException)
