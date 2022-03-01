@@ -30,7 +30,7 @@ namespace Litio
             }
         }
 
-        public static void Start()
+        public static void Start(DiscordSocketClient client)
         {
             try
             {
@@ -43,7 +43,7 @@ namespace Litio
                             Thread.Sleep(5);
                             try
                             {
-                                /*switch (Utils.GetPunishmentType(raiders[0].Guild))
+                                switch (Utils.GetPunishmentType(raiders[0].Guild))
                                 {
                                     case LitioPunishment.Ban:
                                         raiders[0].Ban("[Anti-Raid] Raid detected", 1);
@@ -54,8 +54,7 @@ namespace Litio
                                     case LitioPunishment.Timeout:
                                         client.TimeoutUser(raiders[0].Guild.Id, raiders[0].User.Id, Utils.Guilds.FirstOrDefault(x => x.GuildId == raiders[0].Guild.Id.ToString()).TimeoutDuration);
                                         break;
-                                }*/
-                                raiders[0].Ban("[Litio] Raid detected", 1);
+                                }
 
                                 raiders.RemoveAt(0);
                             }

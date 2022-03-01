@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
 using System.Drawing;
+using System.Linq;
 
 namespace Litio
 {
@@ -16,11 +17,23 @@ namespace Litio
         {
             try
             {
-                return Guilds.Find(x => x.GuildId == guild.Id.ToString()).PunishmentType;
+                return Guilds.FirstOrDefault(x => x.GuildId == guild.Id.ToString()).PunishmentType;
             }
             catch
             {
                 return LitioPunishment.Ban;
+            }
+        }
+
+        public static bool GetAntiRaidToggle(MinimalGuild guild)
+        {
+            try
+            {
+                return Guilds.FirstOrDefault(x => x.GuildId == guild.Id.ToString()).Toggled;
+            }
+            catch
+            {
+                return false;
             }
         }
 

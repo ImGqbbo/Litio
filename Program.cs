@@ -3,6 +3,7 @@ using Discord.Gateway;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -21,32 +22,63 @@ namespace Litio
         public static readonly int MaxMessages = 14;
         public static readonly int MaxThreads = 5;
         public static readonly TimeSpan MessageExpiration = new TimeSpan(0, 0, 2);
+        public static readonly TimeSpan JoinExpiration = new TimeSpan(0, 0, 2);
         public static readonly TimeSpan ThreadExpiration = new TimeSpan(0, 0, 2);
 
         static void Main(string[] args)
         {
-            Console.WriteLine(" [Litio] Starting and setting up, please wait.");
-            Console.Title = "Litio Anti-Raid";
-
-            client = new DiscordSocketClient(new DiscordSocketConfig()
+            try
             {
-                Intents = GatewayIntentBundles.Guilds | GatewayIntentBundles.GuildMessages | GatewayIntentBundles.GuildAdministration | DiscordGatewayIntent.GuildMembers,
-                RetryOnRateLimit = true,
-                ApiVersion = 9
-            });
-            BanQueue.Start();
+                Console.WriteLine(" [Litio] Starting and setting up, please wait.");
+                Console.Title = "Litio V2 | Anti-Raid";
 
-            client.OnLoggedIn += Client_OnLoggedIn;
-            client.OnJoinedGuild += Client_OnJoinedGuild;
-            client.OnMessageReceived += Client_OnMessageReceived;
-            client.OnUserJoinedGuild += Client_OnUserJoinedGuild;
-            client.OnThreadCreated += Client_OnThreadCreated;
+                client = new DiscordSocketClient(new DiscordSocketConfig()
+                {
+                    Intents = GatewayIntentBundles.Guilds | GatewayIntentBundles.GuildMessages | GatewayIntentBundles.GuildAdministration | DiscordGatewayIntent.GuildMembers,
+                    RetryOnRateLimit = true,
+                    ApiVersion = 9
+                });
+                BanQueue.Start(client);
 
-            Console.Write(" [Litio] Insert your bot token: ");
-            string Token = Console.ReadLine();
-            client.Login(Token);
+                client.OnLoggedIn += Client_OnLoggedIn;
+                client.OnJoinedGuild += Client_OnJoinedGuild;
+                client.OnMessageReceived += Client_OnMessageReceived;
+                client.OnUserJoinedGuild += Client_OnUserJoinedGuild;
+                client.OnThreadCreated += Client_OnThreadCreated;
+                client.OnInteraction += Client_OnInteraction;
 
-            Thread.Sleep(-1);
+                Console.Write(" [Litio] Bot token? [Y/N] ");
+                string botToken = Console.ReadLine();
+                Console.Write(" [Litio] Insert token: ");
+                string token = Console.ReadLine();
+                
+                client.Login(botToken.ToLower() == "y" ? "Bot " + token : token);
+                Thread.Sleep(-1);
+            }
+            catch (InvalidTokenException)
+            {
+                Console.WriteLine(" [Litio] Invalid token, if bot token make sure you have inserted 'Bot ' as prefix (without the ').");
+                Console.ReadLine();
+            }
+        }
+
+        private static DiscordEmbed CreateEmbed(Color Color, GuildMember member, string AuthorName, string Description)
+        {
+            return new EmbedMaker()
+            {
+                Color = Color,
+                Author = new EmbedAuthor()
+                {
+                    Name = AuthorName,
+                    IconUrl = member.User.Avatar != null ? member.User.Avatar.Url : client.User.Avatar.Url
+                },
+                Description = Description,
+                Footer = new EmbedFooter()
+                {
+                    Text = "Litio",
+                },
+                Timestamp = DateTime.Now
+            };
         }
 
         private static void Client_OnThreadCreated(DiscordSocketClient client, ThreadEventArgs args)
@@ -58,7 +90,7 @@ namespace Litio
                 {
                     threadRaiders.RemoveAll(m => m.Metadata.CreatedAt < (DateTime.Now - new TimeSpan(0, 0, 3)) - ThreadExpiration);
                 }
-                if (GetAntiRaidToggle(args.Thread.Guild) == true)
+                if (Utils.GetAntiRaidToggle(args.Thread.Guild) == true)
                 {
                     threadRaiders.Add(args.Thread);
                     if (threadRaiders.Count() >= MaxThreads)
@@ -99,42 +131,31 @@ namespace Litio
             {
                 Console.WriteLine($" [Litio] Joined new guild! Name: {args.Guild.Name} | Id: {args.Guild.Id} | Members: {args.Guild.MemberCount}");
 
-                Raiders[args.Guild.Id] = new List<GuildMember>();
-                foreach (GuildChannel channel in args.Guild.GetChannels())
+                if (!Raiders.ContainsKey(args.Guild.Id))
                 {
-                    if (channel.IsText)
+                    Raiders[args.Guild.Id] = new List<GuildMember>();
+                    foreach (GuildChannel channel in args.Guild.GetChannels())
                     {
-                        Messages[channel.Id] = new List<DiscordMessage>();
-                        Threads[channel.Id] = new List<DiscordThread>();
+                        if (channel.IsText)
+                        {
+                            Messages[channel.Id] = new List<DiscordMessage>();
+                            Threads[channel.Id] = new List<DiscordThread>();
+                        }
                     }
-                }
 
-                if (!Utils.Guilds.Select(x => x.GuildId).Contains(args.Guild.Id.ToString()))
-                {
-                    Console.WriteLine(" [Litio] Saving guild...");
-                    Utils.Guilds.Add(new LitioGuild() { TimeoutDuration = new TimeSpan(0, 0, 0), PunishmentType = LitioPunishment.Ban, GuildId = args.Guild.Id.ToString(), Toggled = true });
-                    File.WriteAllText("Database.txt", JsonConvert.SerializeObject(Utils.Guilds, Formatting.Indented));
+                    if (!Utils.Guilds.Select(x => x.GuildId).Contains(args.Guild.Id.ToString()))
+                    {
+                        Console.WriteLine(" [Litio] Saving guild...");
+                        Utils.Guilds.Add(new LitioGuild() { TimeoutDuration = new TimeSpan(0, 0, 0), PunishmentType = LitioPunishment.Ban, GuildId = args.Guild.Id.ToString(), Toggled = true });
+                        File.WriteAllText("Database.txt", JsonConvert.SerializeObject(Utils.Guilds, Formatting.Indented));
 
-                    Console.WriteLine(" [Litio] Saved guild.");
+                        Console.WriteLine(" [Litio] Saved guild.");
+                    }
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(" [Litio] Error occurred: " + ex.Message);
-            }
-        }
-
-
-
-        private static bool GetAntiRaidToggle(MinimalGuild guild)
-        {
-            try
-            {
-                return Utils.Guilds.Find(x => x.GuildId == guild.Id.ToString()).Toggled;
-            }
-            catch
-            {
-                return false;
             }
         }
 
@@ -145,9 +166,9 @@ namespace Litio
                 var raiders = Raiders[args.Member.Guild.Id];
                 if (raiders.Count > 0)
                 {
-                    raiders.RemoveAll(m => m.JoinedAt < (DateTime.Now - new TimeSpan(0, 0, 3)) - MessageExpiration);
+                    raiders.RemoveAll(m => m.JoinedAt < (DateTime.Now - new TimeSpan(0, 0, 3)) - JoinExpiration);
                 }
-                if (GetAntiRaidToggle(args.Member.Guild) == true)
+                if (Utils.GetAntiRaidToggle(args.Member.Guild) == true)
                 {
                     raiders.Add(args.Member);
                     if (raiders.Count >= MaxJoins)
@@ -227,7 +248,7 @@ namespace Litio
                         messages.RemoveAll(m => m.SentAt < DateTime.Now - new TimeSpan(0, 0, 3) - MessageExpiration);
                     }
 
-                    if (GetAntiRaidToggle(args.Message.Guild) == true)
+                    if (Utils.GetAntiRaidToggle(args.Message.Guild) == true)
                     {
                         messages.Add(args.Message);
                         if (messages.Count >= MaxMessages)
@@ -260,16 +281,106 @@ namespace Litio
             }
         }
 
+        private static void Client_OnInteraction(DiscordSocketClient client, DiscordInteractionEventArgs args)
+        {
+            try
+            {
+                switch (args.Interaction.Data.CommandName)
+                {
+                    case "setpunishment":
+                        try
+                        {
+                            if (!args.Interaction.Member.GetPermissions().Has(DiscordPermission.ManageGuild))
+                            {
+                                args.Interaction.Respond(InteractionCallbackType.RespondWithMessage, new InteractionResponseProperties()
+                                {
+                                    Embed = CreateEmbed(Utils.Error, args.Interaction.Member, "Missing permissions.", $"You don't have the required permissions to execute that command."),
+                                    Ephemeral = true
+                                });
+                            }
+
+                            string punishmentType = "Ban";
+                            switch (args.Interaction.Data.CommandArguments[0].Value.ToLower())
+                            {
+                                case "punishment_ban":
+                                    Utils.Guilds.FirstOrDefault(x => x.GuildId == args.Interaction.Guild.Id.ToString()).PunishmentType = LitioPunishment.Ban;
+                                    break;
+                                case "punishment_kick":
+                                    Utils.Guilds.FirstOrDefault(x => x.GuildId == args.Interaction.Guild.Id.ToString()).PunishmentType = LitioPunishment.Kick;
+                                    punishmentType = "Kick";
+                                    break;
+                                case "punishment_timeout":
+                                    Utils.Guilds.FirstOrDefault(x => x.GuildId == args.Interaction.Guild.Id.ToString()).PunishmentType = LitioPunishment.Timeout;
+                                    punishmentType = "Timeout";
+                                    break;
+                            }
+                            args.Interaction.Respond(InteractionCallbackType.RespondWithMessage, new InteractionResponseProperties()
+                            {
+                                Embed = CreateEmbed(Utils.Success, args.Interaction.Member, client.GetGuild(args.Interaction.Guild.Id).Name, $"Updated punishment type as `{punishmentType}`"),
+                                Ephemeral = true,
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex.Message);
+                            args.Interaction.Respond(InteractionCallbackType.RespondWithMessage, new InteractionResponseProperties()
+                            {
+                                Embed = CreateEmbed(Utils.Error, args.Interaction.Member, "Error occurred.", "An unknown error has occurred, we apologize for the inconvenience."),
+                                Ephemeral = true
+                            });
+                        }
+                        break;
+                }
+            }
+            catch (DiscordHttpException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
         private static void Client_OnLoggedIn(DiscordSocketClient client, LoginEventArgs args)
         {
-            Console.Title = "Logged in as " + client.User;
-            Console.WriteLine(" [Litio] Logged in");
-            Utils.Guilds = Utils.GetGuilds();
+            try
+            {
+                Console.Title = "Litio V2 | Logged in as " + client.User;
+                Console.WriteLine(" [Litio] Logged in");
+                Utils.Guilds = Utils.GetGuilds();
+                if (args.User.Type == DiscordUserType.User)
+                {
+                    foreach (var guild in args.Guilds)
+                    {
+                        if (!Raiders.ContainsKey(guild.Id))
+                        {
+                            Raiders[guild.Id] = new List<GuildMember>();
+                            foreach (GuildChannel channel in guild.GetChannels())
+                            {
+                                if (channel.IsText)
+                                {
+                                    Messages[channel.Id] = new List<DiscordMessage>();
+                                    Threads[channel.Id] = new List<DiscordThread>();
+                                }
+                            }
 
-            foreach (var cmd in client.GetGlobalCommands(client.User.Id))
-                cmd.Delete();
+                            if (!Utils.Guilds.Select(x => x.GuildId).Contains(guild.Id.ToString()))
+                            {
+                                Console.WriteLine(" [Litio] Saving guild...");
+                                Utils.Guilds.Add(new LitioGuild() { TimeoutDuration = new TimeSpan(0, 0, 0), PunishmentType = LitioPunishment.Ban, GuildId = guild.Id.ToString(), Toggled = true });
+                                File.WriteAllText("Database.txt", JsonConvert.SerializeObject(Utils.Guilds, Formatting.Indented));
 
-            client.RegisterSlashCommands();
+                                Console.WriteLine(" [Litio] Saved guild.");
+                            }
+                        }
+                    }
+                }
+
+                client.RegisterSlashCommands();
+                string data = "{\"name\":\"setpunishment\",\"type\":1,\"description\":\"Set the punishment type for the current guild.\",\"options\":[{\"name\":\"punishment\",\"description\":\"The punishment type.\",\"type\":3,\"required\":true,\"choices\":[{\"name\":\"Ban\",\"value\":\"punishment_ban\"},{\"name\":\"Kick\",\"value\":\"punishment_kick\"},{\"name\":\"Timeout\",\"value\":\"punishment_timeout\"}]}]}";
+                client.HttpClient.PostAsync($"https://discord.com/api/v9/applications/{client.User.Id}/commands", data).GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
     }
 }
