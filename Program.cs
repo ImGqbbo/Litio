@@ -47,12 +47,7 @@ namespace Litio
                 client.OnThreadCreated += Client_OnThreadCreated;
                 client.OnInteraction += Client_OnInteraction;
 
-                Console.Write(" [Litio] Bot token? [Y/N] ");
-                string botToken = Console.ReadLine();
-                Console.Write(" [Litio] Insert token: ");
-                string token = Console.ReadLine();
-                
-                client.Login(botToken.ToLower() == "y" ? "Bot " + token : token);
+                client.Login(Utils.Token);
                 Thread.Sleep(-1);
             }
             catch (InvalidTokenException)
@@ -319,6 +314,7 @@ namespace Litio
                                 Embed = CreateEmbed(Utils.Success, args.Interaction.Member, client.GetGuild(args.Interaction.Guild.Id).Name, $"Updated punishment type as `{punishmentType}`"),
                                 Ephemeral = true,
                             });
+                            File.WriteAllText("Database.txt", JsonConvert.SerializeObject(Utils.Guilds));
                         }
                         catch (Exception ex)
                         {
