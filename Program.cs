@@ -314,7 +314,7 @@ namespace Litio
                                 Embed = CreateEmbed(Utils.Success, args.Interaction.Member, client.GetGuild(args.Interaction.Guild.Id).Name, $"Updated punishment type as `{punishmentType}`"),
                                 Ephemeral = true,
                             });
-                            File.WriteAllText("Database.txt", JsonConvert.SerializeObject(Utils.Guilds));
+                            File.WriteAllText("Database.txt", JsonConvert.SerializeObject(Utils.Guilds, Formatting.Indented));
                         }
                         catch (Exception ex)
                         {
