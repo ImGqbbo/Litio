@@ -7,7 +7,7 @@ using System.Linq;
 namespace Litio.Commands
 {
     [SlashCommand("purge", "Purge a customizable amount of messages.")]
-    public class PurgeCommand : SlashCommand
+    public class PurgeCmd : SlashCommand
     {
         [SlashParameter("amount", "Amount of messages to purge.", true)]
         public uint Amount { get; private set; }
@@ -35,7 +35,7 @@ namespace Litio.Commands
         {
             try
             {
-                if (!CallerMember.GetPermissions().Has(DiscordPermission.ManageThreads))
+                if (!CallerMember.GetPermissions().Has(DiscordPermission.ManageMessages))
                 {
                     return new InteractionResponseProperties()
                     {
@@ -53,23 +53,24 @@ namespace Litio.Commands
                     };
                 }
 
-                if (Amount == 100) Amount = Amount - 1;
-                var messages = Client.GetChannelMessages(Channel.Id, new MessageFilters() { Limit = Amount });
-                if (messages != null && messages.Count > 0)
+                var messages = Client.GetChannelMessages(Channel.Id, new MessageFilters() { Limit = Amount == 100 ? Amount - 1 : Amount});
+                if (messages.Count > 0)
                 {
                     Client.DeleteMessages(Channel.Id, messages.Select(x => x.Id).ToList());
                     return new InteractionResponseProperties()
                     {
-                        Embed = CreateEmbed(Utils.Success, "Task completed.", $"Succesfully deleted `{Amount}` messages."),
-                        Ephemeral = false
+                        Embed = CreateEmbed(Utils.Success, Client.GetGuild(Guild.Id).Name, $"Succesfully deleted `{Amount}` messages."),
+                        Ephemeral = true
                     };
                 }
-
-                return new InteractionResponseProperties()
+                else
                 {
-                    Embed = CreateEmbed(Utils.Error, "Error occurred.", "Failed to fetch the messages, we apologize for the inconvenience."),
-                    Ephemeral = true
-                };
+                    return new InteractionResponseProperties()
+                    {
+                        Embed = CreateEmbed(Utils.Error, "Error occurred.", "Looks that this channel has no messages to purge."),
+                        Ephemeral = true
+                    };
+                }
             }
             catch
             {

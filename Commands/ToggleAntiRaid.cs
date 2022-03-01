@@ -6,7 +6,7 @@ using System.Drawing;
 namespace Litio.Commands
 {
     [SlashCommand("toggleantiraid", "Toggle anti-raid on/off.")]
-    public class ToggleAntiRaidCommand : SlashCommand
+    public class ToggleAntiRaidCmd : SlashCommand
     {
         [SlashParameter("enabled", "Value to specify if the anti-raid is enabled or not.", true)]
         public bool Toggled { get; private set; }
@@ -46,7 +46,7 @@ namespace Litio.Commands
                 Utils.Guilds.Find(x => x.GuildId == Guild.Id.ToString()).Toggled = Toggled;
                 return new InteractionResponseProperties()
                 {
-                    Embed = CreateEmbed(Utils.Success, "Task completed.", "Succesfully set the anti-raid `" + (Toggled ? "on" : "off") + "`."),
+                    Embed = CreateEmbed(Utils.Success, Client.GetGuild(Guild.Id).Name, "Succesfully set the anti-raid `" + (Toggled ? "on" : "off") + "`."),
                     Ephemeral = false
                 };
             }

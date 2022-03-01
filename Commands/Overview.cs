@@ -1,16 +1,19 @@
 ﻿using Discord;
 using Discord.Commands;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
-using System.Threading;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Litio.Commands
 {
-    [SlashCommand("purgethreads", "Purge all the channel threads (BETA).")]
-    public class PurgeThreadsCmd : SlashCommand
+    [SlashCommand("overview", "View current server settings.")]
+    public class OverviewCmd : SlashCommand
     {
-        [SlashParameter("amount", "Amount of threads to delete.", true)]
-        public uint Amount { get; private set; }
+        [SlashParameter("ephemeral", "Choose if show the message to everyone or just you.")]
+        public bool Ephemeral { get; private set; }
 
         private DiscordEmbed CreateEmbed(Color Color, string AuthorName, string Description)
         {
@@ -35,7 +38,7 @@ namespace Litio.Commands
         {
             try
             {
-                if (!CallerMember.GetPermissions().Has(DiscordPermission.ManageThreads))
+                if (!CallerMember.GetPermissions().Has(DiscordPermission.ManageGuild))
                 {
                     return new InteractionResponseProperties()
                     {
@@ -44,37 +47,12 @@ namespace Litio.Commands
                     };
                 }
 
-                var threads = Client.GetChannelActiveThreads(Channel.Id);
-                if (threads.Count > 0)
+                return new InteractionResponseProperties()
                 {
-                    new Thread(() =>
-                    {
-                        int threadsDeleted = 0;
-                        foreach (DiscordThread thread in threads)
-                        {
-                            Thread.Sleep(100);
-                            if (threadsDeleted == Amount)
-                                break;
-
-                            Client.DeleteThread(thread.Id);
-                            threadsDeleted++;
-                        }
-                    }).Start();
-
-                    return new InteractionResponseProperties()
-                    {
-                        Embed = CreateEmbed(Utils.Success, Client.GetGuild(Guild.Id).Name, $"Succesfully deleted `{Amount}` threads."),
-                        Ephemeral = false
-                    };
-                }
-                else
-                {
-                    return new InteractionResponseProperties()
-                    {
-                        Embed = CreateEmbed(Utils.Error, "Error occurred.", "Looks that this channel has no messages to purge."),
-                        Ephemeral = true
-                    };
-                }
+                    Embed = CreateEmbed(Utils.Success, Client.GetGuild(Guild.Id).Name, $@"**Anti-raid enabled**: `{Utils.GetAntiRaidToggle(Guild)}`
+**Punishment type**: `{Utils.GetPunishmentType(Guild)}`"),
+                    Ephemeral = Ephemeral
+                };
             }
             catch (Exception ex)
             {
