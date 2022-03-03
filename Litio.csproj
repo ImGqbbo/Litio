@@ -37,7 +37,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Anarchy, Version=0.8.1.2, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\Anarchy-wrapper.0.8.1.2\lib\net47\Anarchy.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\KaliSniper\bin\Debug\Anarchy.dll</HintPath>
     </Reference>
     <Reference Include="Leaf.xNet, Version=5.2.10.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\Leaf.xNet.5.2.10\lib\net45\Leaf.xNet.dll</HintPath>
@@ -61,7 +62,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BanQueue.cs" />
+    <Compile Include="Litio\BanQueue.cs" />
+    <Compile Include="Commands\Overview.cs" />
     <Compile Include="Commands\PurgeThreads.cs" />
     <Compile Include="Commands\ToggleAntiRaid.cs" />
     <Compile Include="Commands\Purge.cs" />
@@ -70,7 +72,7 @@
     <Compile Include="Litio\LitioGuild.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utils.cs" />
+    <Compile Include="Litio\Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
