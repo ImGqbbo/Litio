@@ -10,5 +10,6 @@ How to use:
 Thanks to GEFF and TheDemonTeam for helping me testing the bot. Go and checkout their projects and tools: https://github.com/TheDemonTeam.
 
 To contact me: 
-- Discord ImGqbbo#8568/https://discord.gg/TwVVfG6CA5
+- Discord ImGqbbo#8568 
+- KaliSQ https://discord.gg/TwVVfG6CA5
 - Telegram https://t.me/ImGqbbo
